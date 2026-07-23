@@ -109,7 +109,7 @@ end
 
 module Save : sig
   open T
-  type module_content = Channel of in_channel | String of string | Filesystem
+  type module_content = String of string | Filesystem
   val module_content_prop: module_content Property.pfuncs
   val parse_file    : ?clock:Timing.clock -> Util.hint -> mule
   val store_module  : ?clock:Timing.clock -> mule -> unit
