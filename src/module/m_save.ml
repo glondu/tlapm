@@ -29,7 +29,7 @@ let clocking cl fn x =
 
 
 
-type module_content = Channel of in_channel | String of string | Filesystem
+type module_content = String of string | Filesystem
 
 let module_content_prop = Property.make "module_content"
 
@@ -60,7 +60,6 @@ let file_search'' fh =
 
 let file_search fh =
     match Property.query fh module_content_prop with
-    | Some (Channel _)
     | Some (String _) -> Some fh
     | Some Filesystem
     | None -> file_search'' fh
@@ -75,7 +74,6 @@ let really_parse_file fn =
         failwith "Module.Parser.parse_file"
     | Some fn ->
         let (flex, _) = match Property.query fn module_content_prop with
-            | Some (Channel ch) -> Alexer.lex_channel fn.core ch
             | Some (String str) -> Alexer.lex_string ~fn:fn.core str
             | Some Filesystem
             | None -> Alexer.lex fn.core

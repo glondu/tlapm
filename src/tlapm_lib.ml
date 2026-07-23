@@ -498,7 +498,9 @@ let read_new_modules mcx fs =
          This way, the file passed explicitly will be read from `stdin`, and all
          the files referenced from it will be searched in a file system, as usual. *)
       let hint = match !Params.use_stdin with
-      | true -> Property.assign hint Module.Save.module_content_prop (Module.Save.Channel Stdlib.stdin)
+      | true ->
+          let contents = In_channel.(input_all stdin) in
+          Property.assign hint Module.Save.module_content_prop (Module.Save.String contents)
       | false -> hint
       in
       let mule =
