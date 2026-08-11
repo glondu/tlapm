@@ -96,13 +96,11 @@ CONSTANTS _ * _, _ + _
     definition: (finite_set_literal
       (boolean)
       (boolean)
-      (parentheses
-        (bound_infix_op
-          lhs: (parentheses
-            (bound_infix_op lhs: (nat_number) symbol: (plus) rhs: (nat_number))
-          ) symbol: (mul)
-          rhs: (nat_number)
-        )
+      (bound_infix_op
+        lhs:
+          (bound_infix_op lhs: (nat_number) symbol: (plus) rhs: (nat_number))
+        symbol: (mul)
+        rhs: (nat_number)
       )
       (finite_set_literal (nat_number) (nat_number) (nat_number))
     )

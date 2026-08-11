@@ -94,9 +94,9 @@ C == TRUE
   (theorem
     name: (identifier) (def_eq)
     statement: (assume_prove
-      assumption: (inner_assume_prove
+      assumption: (label name:
         (identifier) (label_as)
-        (assume_prove
+        expression: (assume_prove
           assumption: (identifier_ref)
           conclusion: (identifier_ref)
         )
@@ -389,10 +389,10 @@ C == TRUE
       assumption: (new (statement_level) (identifier))
       assumption: (bound_infix_op lhs: (nat_number) symbol: (plus) rhs: (nat_number))
       assumption: (conj_list (conj_item (bullet_conj) (nat_number)) (conj_item (bullet_conj) (nat_number)))
-      assumption: (inner_assume_prove
+      assumption: (label name:
         (identifier)
         (label_as)
-        (assume_prove
+        expression: (assume_prove
           assumption: (identifier_ref)
           conclusion: (identifier_ref)
         )
