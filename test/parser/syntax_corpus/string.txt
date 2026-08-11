@@ -24,12 +24,7 @@ op == "The cow goes \"moo\", the chicken goes \"cluck cluck\""
 
 (source_file (module (header_line) name: (identifier) (header_line)
   (operator_definition name: (identifier) (def_eq) definition:
-    (string
-      (escape_char)
-      (escape_char)
-      (escape_char)
-      (escape_char)
-    )
+    (string)
   )
 (double_line)))
 
@@ -46,8 +41,8 @@ op == <<"/\\", "\\/">>
 (source_file (module (header_line) name: (identifier) (header_line)
   (operator_definition name: (identifier) (def_eq) definition:
     (tuple_literal (langle_bracket)
-      (string (escape_char))
-      (string (escape_char))
+      (string)
+      (string)
     (rangle_bracket))
   )
 (double_line)))
@@ -99,23 +94,27 @@ String with supported escape chars
 ==================|||
 
 ---- MODULE Test ----
-op == "\\ \n \r \f \t \""
+op == "\\ \n \r \t \""
 ====
 
 ------------------|||
 
 (source_file (module (header_line) name: (identifier) (header_line)
   (operator_definition name: (identifier) (def_eq) definition:
-    (string
-      (escape_char)
-      (escape_char)
-      (escape_char)
-      (escape_char)
-      (escape_char)
-      (escape_char)
-    )
+    (string)
   )
 (double_line)))
+
+==================|||
+String with unsupported escape chars
+:error
+==================|||
+
+---- MODULE Test ----
+op == "\f"
+====
+
+------------------|||
 
 ==================|||
 String with Backtick
