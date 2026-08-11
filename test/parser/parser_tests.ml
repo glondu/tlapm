@@ -22,65 +22,6 @@ let parse (input : string) : Module.T.mule option =
     last_parse_error := Printexc.to_string e;
     None
 
-(** Names of tests that are known to fail due to TLAPM parser bugs.
-    @param test Information about the test.
-    @return Whether the test is expected to fail.
-*)
-let expect_parse_failure (test : syntax_test) : bool =
-  List.mem test.info.name [
-
-    (* https://github.com/tlaplus/tlapm/issues/54#issuecomment-2435515180 *)
-    "RECURSIVE inside LET/IN";
-    "Conjlist with RECURSIVE in LET/IN";
-    "Disjlist with RECURSIVE in LET/IN";
-
-    (* https://github.com/tlaplus/tlapm/issues/161 *)
-    "Infix Minus as Parameter";
-    "Prefix Operator References";
-
-    (* https://github.com/tlaplus/tlapm/issues/162 *)
-    "Cartesian Product Infix Op Definition";
-    "Cartesian Product Declaration as Parameter";
-
-    (* https://github.com/tlaplus/tlapm/issues/163 *)
-    "Bitfield Number Formats";
-
-    (* https://github.com/tlaplus/tlapm/issues/165 *)
-    "Proof by QED with implicit step level";
-
-    (* https://github.com/tlaplus/tlapm/issues/166 *)
-    "Use & Hide Modules";
-    "Proof by Module References";
-
-    (* https://github.com/tlaplus/tlapm/issues/167 *)
-    "Proof with INSTANCE step type";
-
-    (* https://github.com/tlaplus/tlapm/issues/168 *)
-    "Invalid parentheses use in jlist";
-
-    (* https://github.com/tlaplus/tlapm/issues/169 *)
-    "Label interfering with precedence";
-    
-    (* https://github.com/tlaplus/tlapm/issues/156 *)
-    "Step Expression With Parameterized Subscript";
-
-    (* https://github.com/tlaplus/tlapm/issues/170 *)
-    "Implicit Proof Steps With Names";
-    "Plus Proof Step With Name";
-
-    (* https://github.com/tlaplus/tlapm/issues/172 *)
-    "Invalid LOCAL Declaration of THEOREM";
-    "Invalid LOCAL Declaration of ASSUME";
-    "Invalid LOCAL Declaration of USE";
-    
-    (* https://github.com/tlaplus/tlapm/issues/173 *)
-    "Decimal No Leading Zero (GH tlaplus/tlaplus #596)";
-
-    (* https://github.com/tlaplus/tlapm/issues/173 *)
-    "Nonfix Submodule Excl (GH tlaplus/tlaplus #GH884)";
-    "Nonfix Double Exclamation Operator (GH TSTLA #GH97, GH tlaplus/tlaplus #884)";
-  ]
-
 (** Names of tests that are unable to match the expected output tree, but not
     because of a bug; instead, the TLAPM syntax tree doesn't contain the
     (usually extraneous) necessary information to fully populate the output
@@ -140,7 +81,7 @@ let run_test test _ =
   skip_if test.skip "Test has skip attribute";
   match test.test with
   | Error_test input -> (
-    let b = expect_parse_failure test in
+    let b = false in
     match parse input with
     | None -> assert_bool "Expected error test to fail" (not b)
     | Some _ -> assert_bool "Expected parse failure" b
@@ -148,7 +89,7 @@ let run_test test _ =
   | Expected_test (input, expected) -> (
       match parse input with
       | None ->
-         let b = expect_parse_failure test in
+         let b = false in
          let msg = Printf.sprintf "Expected parse success, got: %S" !last_parse_error in
          assert_bool msg b
       | Some tlapm_output ->
