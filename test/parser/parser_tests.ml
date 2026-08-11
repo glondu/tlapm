@@ -22,6 +22,21 @@ let parse (input : string) : Module.T.mule option =
     last_parse_error := Printexc.to_string e;
     None
 
+(** Names of tests that are known to succeed (but should fail) due to
+    SANY bugs.
+    @param test Information about the test.
+    @return Whether the test is expected to fail.
+*)
+let sany_false_positive (test : syntax_test) : bool =
+  List.mem test.info.name [
+    "Label with Subexpression Prefix (GH tlaplus/tlaplus #885)";
+    "Empty Tuple Quantification (GH tlaplus/tlaplus #888)";
+
+    (* https://github.com/tlaplus/tlaplus/issues/616 *)
+    "Invalid Use of LOCAL in LET/IN";
+    "Invalid Use of LOCAL in Proof";
+  ]
+
 (** Names of tests that are unable to match the expected output tree, but not
     because of a bug; instead, the TLAPM syntax tree doesn't contain the
     (usually extraneous) necessary information to fully populate the output
@@ -81,7 +96,7 @@ let run_test test _ =
   skip_if test.skip "Test has skip attribute";
   match test.test with
   | Error_test input -> (
-    let b = false in
+    let b = sany_false_positive test in
     match parse input with
     | None -> assert_bool "Expected error test to fail" (not b)
     | Some _ -> assert_bool "Expected parse failure" b
