@@ -37,46 +37,6 @@ let sany_false_positive (test : syntax_test) : bool =
     "Invalid Use of LOCAL in Proof";
   ]
 
-(** Names of tests that are unable to match the expected output tree, but not
-    because of a bug; instead, the TLAPM syntax tree doesn't contain the
-    (usually extraneous) necessary information to fully populate the output
-    tree with the expected children.
-    @param test Information about the test.
-    @return Whether the test should skip the tree comparison phase.
-*)
-let should_skip_tree_comparison (test : syntax_test) : bool =
-  List.mem test.info.name [
-    (* In TLAPM's ASSUME/PROVE parsing, NEW identifiers with unspecified 
-       level are by default Constant instead of Unknown *)
-    "Assume/Prove With New Identifier of Unspecified Level";
-    
-    (* Jlist terminated by single line comment omitted in TLAPM AST *)
-    "Keyword-Unit-Terminated Conjlist";
-    "Keyword-Unit-Terminated Disjlist";
-
-    (* Unnecessary parentheses omitted in TLAPM AST *)
-    "Nested Parentheses";
-
-    (* TLAPM AST does not distinguish between nonfix and infix ops *)
-    "Lexically-Conflicting Nonfix Operators";
-    "Minus and Negative";
-    "Nonfix Minus (GH tlaplus/tlaplus #GH884)";
-    "Nonfix Prefix Operators";
-    "Nonfix Infix Operators";
-    "Nonfix Postfix Operators";
-
-    (* TLAPM uses function literals for function definitions *)
-    (* See: https://github.com/tlaplus/tlapm/issues/237 *)
-    "Function Literal";
-
-    (* TLAPM makes multi-parameter EXCEPT update statements into tuples *)
-    "Record Update with Multiple Parameters";
-    "Record Update with Tuple and Non-Tuple Parameters";
-    
-    (* TLAPM does not distinguish between <=> and \equiv *)
-    "IFF Disambiguation"
-  ]
-
 (** Names of tests that are expected to fail the tree comparison phase due to
     bugs in TLAPM's syntax parser.
     @param test Information about the test.
@@ -108,7 +68,6 @@ let run_test test _ =
          let msg = Printf.sprintf "Expected parse success, got: %S" !last_parse_error in
          assert_bool msg b
       | Some tlapm_output ->
-        skip_if (should_skip_tree_comparison test) "Skipping parse tree comparison";
         let open Tlapm_lib__Sany in
         let open Sexplib in
         let actual = module_to_sexp tlapm_output in
