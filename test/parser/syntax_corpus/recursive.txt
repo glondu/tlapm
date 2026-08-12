@@ -4,6 +4,7 @@ Basic Recursive Declaration
 
 ---- MODULE Test ----
 RECURSIVE f(_)
+f(x) == f(x)
 ====
 
 -------------|||
@@ -41,6 +42,7 @@ Recursive Declaration Without Parameters
 
 ---- MODULE Test ----
 RECURSIVE f
+f == f
 ====
 
 -------------|||
@@ -55,6 +57,8 @@ Multiple Recursive Declarations
 
 ---- MODULE Test ----
 RECURSIVE f(_), g(_)
+f(x) == f(x)
+g(x) == g(x)
 ====
 
 -------------|||
@@ -72,6 +76,12 @@ Mixed Recursive Declarations
 
 ---- MODULE Test ----
 RECURSIVE f(_), g, h(_, _, _), _+_, -. _, _ ^+
+f(x) == f(x)
+g == g
+h(x, y, z) == h(x, y, z)
+x + y == x + y
+-. x == -. x
+x ^+ == x ^+
 ====
 
 -------------|||
