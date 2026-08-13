@@ -293,12 +293,19 @@ Negative Prefix Op on RHS of Infix (GH tlaplus/tlaplus #893)
 =============|||
 
 ---- MODULE Test ----
-op == A & -B
+EXTENDS TestPrelude
+op == A & (-B)
+====
+---- MODULE TestPrelude ----
+VARIABLES A, B
+x & y == 0
+-. x == 1
 ====
 
 --------------|||
 
 (source_file (module (header_line) name: (identifier) (header_line)
+  (extends (identifier_ref))
   (operator_definition name: (identifier) (def_eq) definition:
     (bound_infix_op
       lhs: (identifier_ref)
