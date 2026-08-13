@@ -366,8 +366,6 @@ op == {
   x :> y,
   x - y,
   x -- y,
-  x % y,
-  x %% y,
   x * y,
   x ** y,
   x /= y,
@@ -554,8 +552,6 @@ CONSTANTS
     (bound_infix_op lhs: (identifier_ref) symbol: (map_to) rhs: (identifier_ref))
     (bound_infix_op lhs: (identifier_ref) symbol: (minus) rhs: (identifier_ref))
     (bound_infix_op lhs: (identifier_ref) symbol: (minusminus) rhs: (identifier_ref))
-    (bound_infix_op lhs: (identifier_ref) symbol: (mod) rhs: (identifier_ref))
-    (bound_infix_op lhs: (identifier_ref) symbol: (modmod) rhs: (identifier_ref))
     (bound_infix_op lhs: (identifier_ref) symbol: (mul) rhs: (identifier_ref))
     (bound_infix_op lhs: (identifier_ref) symbol: (mulmul) rhs: (identifier_ref))
     (bound_infix_op lhs: (identifier_ref) symbol: (neq) rhs: (identifier_ref))
@@ -707,8 +703,6 @@ op == f(
   <:,
   :>,
   --,
-  %,
-  %%,
   *,
   **,
   /=,
@@ -892,8 +886,6 @@ f(a1(_,_),a2(_,_),a3(_,_),a4(_,_),a5(_,_),a6(_,_),a7(_,_),a8(_,_),a9(_,_),a10(_,
     parameter: (infix_op_symbol (map_from))
     parameter: (infix_op_symbol (map_to))
     parameter: (infix_op_symbol (minusminus))
-    parameter: (infix_op_symbol (mod))
-    parameter: (infix_op_symbol (modmod))
     parameter: (infix_op_symbol (mul))
     parameter: (infix_op_symbol (mulmul))
     parameter: (infix_op_symbol (neq))
