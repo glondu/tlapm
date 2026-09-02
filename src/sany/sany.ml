@@ -465,9 +465,10 @@ and convert_instance (instance : Xml.instance_node) : Expr.T.instance =
 *)
 and convert_unit_instance (instance : Xml.instance_node) : Module.T.modunit = (
   let instantiation = convert_instance instance in
+  let export = if instance.local then Local else Export in
   match instance.name with
-  | Some name -> Definition (Instance (noprops name, instantiation) |> noprops, User, Hidden, Export)
-  | None -> Anoninst (instantiation, if instance.local then Local else Export)
+  | Some name -> Definition (Instance (noprops name, instantiation) |> noprops, User, Hidden, export)
+  | None -> Anoninst (instantiation, export)
 ) |> attach_props instance.node
 
 (** Converts USE x, y, z and HIDE a, b, c statements. These statements will
