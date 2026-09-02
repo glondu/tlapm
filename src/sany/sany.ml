@@ -396,7 +396,7 @@ and convert_module_node (mule : Xml.module_node) : Module.T.mule =
   *)
   let convert_entry (unit : Xml.unit_kind) : Module.T.modunit option =
     match unit with
-    | Instance instance -> Some (convert_unit_instance instance)
+    | Instance instance -> convert_unit_instance instance mule.name
     | UseOrHide use_or_hide -> Some (convert_use_or_hide use_or_hide)
     | Ref uid -> let entry = resolve_ref mule.node uid in
     match entry.kind with
@@ -405,7 +405,7 @@ and convert_module_node (mule : Xml.module_node) : Module.T.mule =
     | OpDeclNode op_decl_node -> convert_op_decl_node op_decl_node mule.name
     | UserDefinedOpKind user_defined_op_kind -> convert_unit_user_defined_op_kind user_defined_op_kind mule.name
     | TheoremNode theorem_node -> convert_theorem_node entry.uid 0 theorem_node mule.name
-    | ModuleInstanceKind instance -> Some (convert_unit_instance instance)
+    | ModuleInstanceKind instance -> convert_unit_instance instance mule.name
     | BuiltInKind _ -> conversion_failure "BuiltInKind not expected at module top-level" None
     | FormalParamNode _ -> conversion_failure "FormalParamNode not expected at module top-level" None
     | AssumeDefNode assume -> conversion_failure "AssumeDefNode should not be converted directly" None
@@ -463,13 +463,15 @@ and convert_instance (instance : Xml.instance_node) : Expr.T.instance =
 (** INSTANCE conversion at the module unit level. This just wraps a converted
     instance in a Definition or Anoninst variant.
 *)
-and convert_unit_instance (instance : Xml.instance_node) : Module.T.modunit = (
-  let instantiation = convert_instance instance in
-  let export = if instance.local then Local else Export in
-  match instance.name with
-  | Some name -> Definition (Instance (noprops name, instantiation) |> noprops, User, Hidden, export)
-  | None -> Anoninst (instantiation, export)
-) |> attach_props instance.node
+and convert_unit_instance (instance : Xml.instance_node) (enclosing_module_name : string) : Module.T.modunit option =
+  if (Option.get instance.node.location).filename <> enclosing_module_name then None else
+  Some ((
+      let instantiation = convert_instance instance in
+      let export = if instance.local then Local else Export in
+      match instance.name with
+      | Some name -> Definition (Instance (noprops name, instantiation) |> noprops, User, Hidden, export)
+      | None -> Anoninst (instantiation, export)
+    ) |> attach_props instance.node)
 
 (** Converts USE x, y, z and HIDE a, b, c statements. These statements will
     reveal or conceal the given definitions to all subsequent proof steps.
