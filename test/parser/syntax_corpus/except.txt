@@ -171,7 +171,7 @@ CONSTANT _ + _
       (except_update
         update_specifier: (except_update_specifier
           (except_update_fn_appl (nat_number))
-          (except_update_fn_appl (string))
+          (except_update_record_field (identifier_ref))
           (except_update_fn_appl (nat_number))
         )
         new_val: (bound_infix_op lhs: (prev_func_val) symbol: (plus) rhs: (nat_number))
@@ -234,13 +234,13 @@ VARIABLES a, x, y, z
               update_specifier:
                 (except_update_specifier
                     (except_update_fn_appl (nat_number))
-                    (except_update_fn_appl (string))
+                    (except_update_record_field (identifier_ref))
                     (except_update_fn_appl (nat_number)))
               new_val: (prev_func_val))
             (except_update
               update_specifier:
                 (except_update_specifier
-                    (except_update_fn_appl (string))
+                    (except_update_record_field (identifier_ref))
                     (except_update_fn_appl (identifier_ref)))
               new_val: (nat_number))
             (except_update
@@ -313,7 +313,7 @@ VARIABLE a
                 (except_update_specifier
                     (except_update_record_field (identifier_ref))
                     (except_update_record_field (identifier_ref))
-                    (except_update_fn_appl (string)))
+                    (except_update_record_field (identifier_ref)))
               new_val: (string))
             (except_update
               update_specifier:
