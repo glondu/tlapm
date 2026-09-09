@@ -37,8 +37,8 @@ let sany_false_positive (test : syntax_test) : bool =
     "Invalid Use of LOCAL in Proof";
   ]
 
-(** Names of tests that are expected to fail the tree comparison phase due to
-    bugs in TLAPM's syntax parser.
+(** Names of tests that are expected to fail the tree comparison phase
+    regardless of parser backend, due to bugs in TLAPM's syntax parser.
     @param test Information about the test.
     @return Whether the test is expected to fail the tree comparison phase.
 *)
@@ -48,6 +48,23 @@ let expect_tree_comparison_failure (test : syntax_test) : bool =
     (* https://github.com/tlaplus/tlapm/issues/235 *)
     "Mistaken Set Filter Test";
     "Mistaken Set Filter Tuples Test";
+  ]
+
+(** Names of tests whose expected tree was updated to match SANY's semantic
+    normalization of EXCEPT subscripts (r["a"] desugars to r.a per the TLA+
+    spec, so SANY emits except_update_record_field instead of
+    except_update_fn_appl (string)), which TLAPM's own syntactic parser does
+    not perform. These are only expected to fail the tree comparison phase
+    under the TLAPM backend.
+    @param test Information about the test.
+    @return Whether the test is expected to fail the tree comparison phase
+    under the TLAPM backend specifically.
+*)
+let expect_tlapm_tree_comparison_failure (test : syntax_test) : bool =
+  List.mem test.info.name [
+    "Single nested record update";
+    "Multiple nested record updates";
+    "Multiple nested record updates with mixed dot/function syntax";
   ]
 
 open OUnit2;;
@@ -71,7 +88,11 @@ let run_test test _ =
         let open Tlapm_lib__Sany in
         let open Sexplib in
         let actual = module_to_sexp tlapm_output in
-        let b = expect_tree_comparison_failure test in
+        let b =
+          expect_tree_comparison_failure test
+          || (!Tlapm_lib__Params.parser_backend = Tlapm_lib__Params.Tlapm
+              && expect_tlapm_tree_comparison_failure test)
+        in
         if Sexp.equal expected actual
         then assert_bool "Expected parse test to fail" (not b)
         else
