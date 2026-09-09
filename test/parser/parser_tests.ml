@@ -65,6 +65,14 @@ let expect_tlapm_tree_comparison_failure (test : syntax_test) : bool =
     "Single nested record update";
     "Multiple nested record updates";
     "Multiple nested record updates with mixed dot/function syntax";
+
+    (* SANY normalizes \b/\o/\h radix-prefixed numerals to their decimal
+       value during semantic analysis, discarding the original radix, so
+       its output no longer matches the corpus's radix-preserving expected
+       tree under this backend either -- but TLAPM's own syntactic parser
+       doesn't support this literal syntax at all (returns a parse
+       failure), so this entry is currently inert for the TLAPM backend. *)
+    "Bitfield Number Formats";
   ]
 
 open OUnit2;;
