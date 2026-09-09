@@ -1019,10 +1019,10 @@ and convert_expression (expr : Xml.expression) : Expr.T.expr =
   match expr with
   (* TODO: true means @ from EXCEPT, false means @ from proof step (???) *)
   | AtNode at_node -> At true |> attach_props at_node.node
-  | DecimalNode {node; integralPart; fractionalPart} -> Num (Int.to_string integralPart, Int.to_string fractionalPart) |> attach_props node
+  | DecimalNode {node; integralPart; fractionalPart} -> Num (integralPart, fractionalPart) |> attach_props node
   | LabelNode label -> convert_label label
   | LetInNode let_in -> convert_let_in_node let_in
-  | NumeralNode n -> Num (Int.to_string n.value, "") |> attach_props n.node
+  | NumeralNode n -> Num (n.value, "") |> attach_props n.node
   | OpApplNode apply -> convert_op_appl_node apply
   | StringNode s -> String s.value |> attach_props s.node
   | SubstInNode subst -> convert_substitution_in subst

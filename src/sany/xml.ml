@@ -169,29 +169,38 @@ let extract_inline_definition_opt (node, children : node * tree list) : (node * 
   | Node ("definition", [Node ("TheoremDefRef", [Node ("UID", [IValue uid])])]) :: children -> (node, Some uid, children);
   | _ -> (node, None, children)
 
+(** SANY's XML data-parser (see [str_to_xml] above) only classifies a text
+    node as [IValue] when it fits OCaml's native int; anything wider comes
+    through as [SValue]. NumeralNode and DecimalNode digit strings can
+    legitimately exceed that width (e.g. long \b/\o/\h radix-prefixed
+    numerals, tlaplus/tlaplus#1419), and since TLAPM's own AST stores
+    numeral digits as strings rather than native ints (see [Expr.T.Num]),
+    there is no need to round-trip through an int here at all.
+*)
+let text_of_int_value : tree -> string option = function
+  | IValue v -> Some (string_of_int v)
+  | SValue v -> Some v
+  | Node _ -> None
+
 type decimal_node = {
   node : node;
-  mantissa : int;
-  exponent : int;
-  integralPart : int;
-  fractionalPart : int
+  integralPart : string;
+  fractionalPart : string
 }
 [@@deriving show]
 
 let xml_to_decimal_node (children : tree list) : decimal_node =
   match extract_inline_node children with
   | node, [
-      Node ("mantissa", [IValue mantissa]);
-      Node ("exponent", [IValue exponent]);
-      Node ("integralPart", [IValue integralPart]);
-      Node ("fractionalPart", [IValue fractionalPart]);
-    ] -> {
-      node;
-      mantissa;
-      exponent;
-      integralPart;
-      fractionalPart;
-    }
+      Node ("mantissa", [_]);
+      Node ("exponent", [_]);
+      Node ("integralPart", [integralPart]);
+      Node ("fractionalPart", [fractionalPart]);
+    ] -> (
+      match text_of_int_value integralPart, text_of_int_value fractionalPart with
+      | Some integralPart, Some fractionalPart -> { node; integralPart; fractionalPart }
+      | _ -> ls_conversion_failure __FUNCTION__ children
+    )
   | _ -> ls_conversion_failure __FUNCTION__ children
 
 type 'a literal = {
@@ -200,9 +209,13 @@ type 'a literal = {
 }
 [@@deriving show]
 
-let xml_to_numeral_node (children : tree list) : int literal =
+let xml_to_numeral_node (children : tree list) : string literal =
   match extract_inline_node children with
-  | node, [Node ("IntValue", [IValue value])] -> {node; value}
+  | node, [Node ("IntValue", [v])] -> (
+      match text_of_int_value v with
+      | Some value -> {node; value}
+      | None -> ls_conversion_failure __FUNCTION__ children
+    )
   | _ -> ls_conversion_failure __FUNCTION__ children
 
 let xml_to_string_node (children : tree list) : string literal =
@@ -297,7 +310,7 @@ and expression =
   | DecimalNode of decimal_node
   | LabelNode of label_node
   | LetInNode of let_in_node
-  | NumeralNode of int literal
+  | NumeralNode of string literal
   | OpApplNode of op_appl_node
   | StringNode of string literal
   | SubstInNode of subst_in_node
