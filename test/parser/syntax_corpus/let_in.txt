@@ -22,7 +22,8 @@ x - y == 0
   (extends (identifier_ref))
   (operator_definition name: (identifier) (def_eq) definition:
     (let_in
-      (recursive_declaration (operator_declaration (identifier) (placeholder)))
+      definitions:
+      (recursive_declaration (operator_declaration name: (identifier) parameter: (placeholder)))
       definitions:
         (operator_definition name: (identifier) parameter: (identifier) (def_eq) definition:
           (if_then_else
@@ -96,7 +97,8 @@ Q == TRUE
         (bullet_conj)
         (let_in
           definitions:
-            (recursive_declaration (identifier))
+            (recursive_declaration name: (identifier))
+          definitions:
             (operator_definition name: (identifier) (def_eq) definition:
               (identifier_ref))
           expression: (identifier_ref)
@@ -229,7 +231,8 @@ Q == TRUE
       (disj_item
         (bullet_disj)
         (let_in definitions:
-          (recursive_declaration (identifier))
+          (recursive_declaration name: (identifier))
+          definitions:
           (operator_definition name: (identifier) (def_eq) definition: (identifier_ref))
           expression:
           (identifier_ref)
