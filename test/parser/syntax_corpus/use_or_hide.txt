@@ -118,6 +118,7 @@ a * b == 2
 
 =============|||
 Use & Hide Modules
+:skip
 =============|||
 
 ---- MODULE Test ----
