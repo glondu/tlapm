@@ -423,12 +423,51 @@ and convert_module_node (mule : Xml.module_node) : Module.T.mule =
     let second_line_start, second_col_start = Loc.line second_loc.start, Loc.column second_loc.start in
     let line_order = first_line_start - second_line_start
     in if line_order <> 0 then line_order else first_col_start - second_col_start
+  (* Operators declared by the same RECURSIVE statement (or one enclosing
+     them at the same LET/IN level) share a recursiveSection value, which
+     convert_unit_user_defined_op_kind has no way to see on its own -- it
+     only ever looks at the one operator it's converting. Gather this
+     module's own (non-inlined) recursive operators here instead, so a
+     joint declaration like RECURSIVE f(_), g(_) can be combined into a
+     single Recursives unit rather than one per operator, the way it was
+     actually written.
+  *)
+  in let own_recursive_op (unit : Xml.unit_kind) : Xml.user_defined_op_kind option =
+    match unit with
+    | Ref uid -> (
+        match (resolve_ref mule.node uid).kind with
+        | UserDefinedOpKind op
+          when op.recursive
+            && Option.is_some op.recursive_section
+            && (resolve_module_node op.node op.originalModule).name = mule.name
+            && not (String.contains op.name '!')
+          -> Some op
+        | _ -> None
+      )
+    | _ -> None
+  in let recursive_ops = List.filter_map own_recursive_op mule.units
+  in let recursive_sections = recursive_ops
+    |> List.map (fun (op : Xml.user_defined_op_kind) -> Option.get op.recursive_section)
+    |> List.sort_uniq compare
+  (* The Recursives unit must sort ahead of every one of its members' own
+     Definition units, so it takes on the earliest location among them
+     rather than, say, that of the first one encountered in mule.units
+     (unit order is not guaranteed to match source order; see order_unit). *)
+  in let earliest_op_node (ops : Xml.user_defined_op_kind list) : Xml.node =
+    let loc_key (op : Xml.user_defined_op_kind) = Option.map (fun (l : Xml.location) -> (fst l.line, fst l.column)) op.node.location
+    in ops |> List.fold_left (fun best op -> if loc_key op < loc_key best then op else best) (List.hd ops)
+    |> fun (op : Xml.user_defined_op_kind) -> op.node
+  in let recursive_group_units : Module.T.modunit list =
+    recursive_sections |> List.map (fun section ->
+      let ops = recursive_ops |> List.filter (fun (op : Xml.user_defined_op_kind) -> op.recursive_section = Some section)
+      in Recursives (List.map convert_recursive_decl ops) |> attach_props (earliest_op_node ops)
+    )
   in {
     name = noprops mule.name;
     extendees = List.map (fun name -> noprops name) mule.extends;
     instancees = []; (* TODO: collate list of instancees from units *)
     (* Filter map to skip all operators which were inlined during import. *)
-    body = mule.units |> List.concat_map convert_entry |> List.stable_sort order_unit;
+    body = (recursive_group_units @ (mule.units |> List.concat_map convert_entry)) |> List.stable_sort order_unit;
     defdepth = 0;
     stage = Parsed;
     important = false
@@ -1124,7 +1163,10 @@ and convert_unit_user_defined_op_kind (xml: Xml.user_defined_op_kind) (enclosing
       Hidden, (* If Visible, will be auto-included in all BY proofs *)
       if xml.local then Local else Export
     ) |> attach_props xml.node
-  in if xml.recursive
+  in if xml.recursive && xml.recursive_section = None
+  (* No recursiveSection info (e.g. an older tla2tools.jar): fall back to a
+     singleton Recursives unit, losing any joint-declaration grouping.
+     Normally grouped by recursive_section instead; see convert_module_node. *)
   then [Recursives [convert_recursive_decl xml] |> attach_props xml.node; definition]
   else [definition]
 
