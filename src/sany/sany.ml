@@ -394,18 +394,18 @@ and convert_module_node (mule : Xml.module_node) : Module.T.mule =
       Thus in-scope operator parameters coexist alongside entire modules, and
       here we branch out to the appropriate conversion method.
   *)
-  let convert_entry (unit : Xml.unit_kind) : Module.T.modunit option =
+  let convert_entry (unit : Xml.unit_kind) : Module.T.modunit list =
     match unit with
-    | Instance instance -> convert_unit_instance instance mule.name
-    | UseOrHide use_or_hide -> Some (convert_use_or_hide use_or_hide)
+    | Instance instance -> Option.to_list (convert_unit_instance instance mule.name)
+    | UseOrHide use_or_hide -> [convert_use_or_hide use_or_hide]
     | Ref uid -> let entry = resolve_ref mule.node uid in
     match entry.kind with
-    | ModuleNode submod -> Some (Submod (convert_module_node submod) |> attach_props submod.node)
-    | AssumeNode assume -> Some (convert_assume_node assume)
-    | OpDeclNode op_decl_node -> convert_op_decl_node op_decl_node mule.name
+    | ModuleNode submod -> [Submod (convert_module_node submod) |> attach_props submod.node]
+    | AssumeNode assume -> [convert_assume_node assume]
+    | OpDeclNode op_decl_node -> Option.to_list (convert_op_decl_node op_decl_node mule.name)
     | UserDefinedOpKind user_defined_op_kind -> convert_unit_user_defined_op_kind user_defined_op_kind mule.name
-    | TheoremNode theorem_node -> convert_theorem_node entry.uid 0 theorem_node mule.name
-    | ModuleInstanceKind instance -> convert_unit_instance instance mule.name
+    | TheoremNode theorem_node -> Option.to_list (convert_theorem_node entry.uid 0 theorem_node mule.name)
+    | ModuleInstanceKind instance -> Option.to_list (convert_unit_instance instance mule.name)
     | BuiltInKind _ -> conversion_failure "BuiltInKind not expected at module top-level" None
     | FormalParamNode _ -> conversion_failure "FormalParamNode not expected at module top-level" None
     | AssumeDefNode assume -> conversion_failure "AssumeDefNode should not be converted directly" None
@@ -428,7 +428,7 @@ and convert_module_node (mule : Xml.module_node) : Module.T.mule =
     extendees = List.map (fun name -> noprops name) mule.extends;
     instancees = []; (* TODO: collate list of instancees from units *)
     (* Filter map to skip all operators which were inlined during import. *)
-    body = mule.units |> List.filter_map convert_entry |> List.sort order_unit;
+    body = mule.units |> List.concat_map convert_entry |> List.stable_sort order_unit;
     defdepth = 0;
     stage = Parsed;
     important = false
@@ -1068,16 +1068,21 @@ and convert_substitution_in (subst : Xml.subst_in_node) : Expr.T.expr =
     followed by a body expression in which the definitions are available.
 *)
 and convert_let_in_node ({node; def_refs; body} : Xml.let_in_node) : Expr.T.expr =
-  let convert_definition (def_ref : int) : Expr.T.defn =
+  let convert_definition (def_ref : int) : Expr.T.defn list =
     match (resolve_ref node def_ref).kind with
-    | UserDefinedOpKind op -> convert_user_defined_op_kind op
+    | UserDefinedOpKind op ->
+      let definition = convert_user_defined_op_kind op in
+      if op.recursive
+      then let (hint, shape) = convert_recursive_decl op in
+        [Recursive (hint, shape) |> noprops; definition]
+      else [definition]
     | ModuleInstanceKind instance -> (
         match instance.name with
-        | Some name -> Instance (noprops name, convert_instance instance) |> noprops
+        | Some name -> [Instance (noprops name, convert_instance instance) |> noprops]
         | None -> conversion_failure "Anonymous INSTANCE not expected within LET/IN" instance.node.location
       )
     | _ -> todo "LET/IN definition" "" None
-  in Let (List.map convert_definition def_refs, convert_expression body) |> attach_props node
+  in Let (List.concat_map convert_definition def_refs, convert_expression body) |> attach_props node
 
 (** Converts user-defined operators defined within LET/IN expressions.
 *)
@@ -1091,21 +1096,37 @@ and convert_user_defined_op_kind (op : Xml.user_defined_op_kind) : Expr.T.defn =
     |> attach_props op.node
   in Operator (attach_props op.node op.name, expr) |> attach_props op.node
 
-(** Converts user-defined operators defined in a module top-level. If operator
-    was defined in a different module, return None.
+(** Builds the (hint, shape) pair RECURSIVE declarations are made of, from
+    the same name/arity fields a non-recursive definition would use.
 *)
-and convert_unit_user_defined_op_kind (xml: Xml.user_defined_op_kind) (enclosing_module_name : string) : Module.T.modunit option =
+and convert_recursive_decl (xml : Xml.user_defined_op_kind) : hint * Expr.T.shape =
+  attach_props xml.node xml.name,
+  match xml.arity with | 0 -> Shape_expr | n -> Shape_op n
+
+(** Converts user-defined operators defined in a module top-level. If operator
+    was defined in a different module, returns the empty list.
+
+    SANY marks a recursive operator with a bool flag on its own
+    UserDefinedOpKind entry rather than preserving the source-level grouping
+    of a joint declaration like RECURSIVE f(_), g(_) (each ends up an
+    independent entry with no cross-reference to the others), so each
+    recursive operator here becomes its own singleton Recursives modunit
+    immediately preceding its definition, rather than one Recursives modunit
+    per RECURSIVE statement grouping every operator it declared.
+*)
+and convert_unit_user_defined_op_kind (xml: Xml.user_defined_op_kind) (enclosing_module_name : string) : Module.T.modunit list =
   (* Skip operators inlined into this module by EXTENDS or INSTANCE *)
-  if (resolve_module_node xml.node xml.originalModule).name <> enclosing_module_name then None else
-  if String.contains xml.name '!' then None else
-  match xml.recursive with
-  | true -> raise (Unsupported_language_feature (Option.map convert_location xml.node.location, RecursiveOperator))
-  | false -> Definition (
+  if (resolve_module_node xml.node xml.originalModule).name <> enclosing_module_name then [] else
+  if String.contains xml.name '!' then [] else
+  let definition = Definition (
       convert_user_defined_op_kind xml,
       User,
       Hidden, (* If Visible, will be auto-included in all BY proofs *)
       if xml.local then Local else Export
-    ) |> attach_props xml.node |> Option.some
+    ) |> attach_props xml.node
+  in if xml.recursive
+  then [Recursives [convert_recursive_decl xml] |> attach_props xml.node; definition]
+  else [definition]
 
 (** This type is redundant with the below TheoremNode type and its conversion
     does not need to be handled. Probably the SANY XML exporter should be
