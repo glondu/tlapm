@@ -16,6 +16,9 @@ f(x) == f(x)
       parameter: (placeholder)
     )
   )
+  (operator_definition name: (identifier) parameter: (identifier) (def_eq)
+    definition: (bound_op name: (identifier_ref) parameter: (identifier_ref))
+  )
 (double_line)))
 
 =============|||
@@ -49,6 +52,7 @@ f == f
 
 (source_file (module (header_line) name: (identifier) (header_line)
   (recursive_declaration name: (identifier))
+  (operator_definition name: (identifier) (def_eq) definition: (identifier_ref))
 (double_line)))
 
 =============|||
