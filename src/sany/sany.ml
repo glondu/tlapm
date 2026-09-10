@@ -1071,6 +1071,11 @@ and convert_let_in_node ({node; def_refs; body} : Xml.let_in_node) : Expr.T.expr
   let convert_definition (def_ref : int) : Expr.T.defn =
     match (resolve_ref node def_ref).kind with
     | UserDefinedOpKind op -> convert_user_defined_op_kind op
+    | ModuleInstanceKind instance -> (
+        match instance.name with
+        | Some name -> Instance (noprops name, convert_instance instance) |> noprops
+        | None -> conversion_failure "Anonymous INSTANCE not expected within LET/IN" instance.node.location
+      )
     | _ -> todo "LET/IN definition" "" None
   in Let (List.map convert_definition def_refs, convert_expression body) |> attach_props node
 
