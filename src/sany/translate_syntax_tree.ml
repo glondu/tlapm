@@ -937,13 +937,31 @@ and translate_expr (expr : Expr.T.expr) : ts_node =
       node_list_map translate_expr arg_exprs
     ]
   }
-  | Let (definitions, expr) -> {
-    name = "let_in";
-    children = List.flatten [
-      field_list_map "definitions" translate_operator_definition definitions;
-      [Field ("expression", (translate_expr expr))]
-    ]
-  }
+  | Let (definitions, expr) ->
+    (* RECURSIVE declarations inside a LET are represented as leading
+       Recursive defns in the same list as the LET's other definitions, but
+       (mirroring the module-level Recursives unit) the syntax corpus expects
+       them grouped into a single "definitions:"-labeled recursive_declaration
+       node ahead of the other definitions, not translated as if each were a
+       definition of its own. *)
+    let is_recursive (defn : Expr.T.defn) = match defn.core with
+      | Recursive _ -> true
+      | _ -> false
+    in let (recursive_defns, other_defns) = List.partition is_recursive definitions
+    in let recursive_decl (defn : Expr.T.defn) = match defn.core with
+      | Recursive (name, shape) -> translate_recursive_decl (name, shape)
+      | _ -> assert false
+    in {
+      name = "let_in";
+      children = List.flatten [
+        (if recursive_defns = [] then [] else [Field ("definitions", {
+          name = "recursive_declaration";
+          children = List.map recursive_decl recursive_defns
+        })]);
+        field_list_map "definitions" translate_operator_definition other_defns;
+        [Field ("expression", (translate_expr expr))]
+      ]
+    }
   | Tuple expr_ls -> {
     name = "tuple_literal";
     children = [leaf "langle_bracket"] @ (node_list_map translate_expr expr_ls) @ [leaf "rangle_bracket"]
