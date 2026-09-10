@@ -341,6 +341,12 @@ and user_defined_op_kind = {
   params      : leibniz_param list;
   precomments : string option;
   recursive   : bool;
+  (** Present iff this operator was declared in (or falls between a
+      RECURSIVE statement and the definition of an operator it declared, at
+      the same LET/IN level) what SANY calls a "recursive section". Two
+      operators with the same value here were declared by the same
+      RECURSIVE statement, or share an enclosing one. *)
+  recursive_section : int option;
   local       : bool;
 }
 
@@ -546,6 +552,9 @@ and xml_to_user_defined_op_kind (children : tree list) : user_defined_op_kind =
       params      = List.map xml_to_leibniz_param parameters;
       precomments;
       recursive   = flags |> List.exists (is_tag "recursive");
+      recursive_section = flags |> List.find_map (function
+        | Node ("recursiveSection", [IValue n]) -> Some n
+        | _ -> None);
       local       = flags |> List.exists (is_tag "local");
     })
   | _ -> ls_conversion_failure __FUNCTION__ children
