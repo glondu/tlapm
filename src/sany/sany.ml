@@ -618,6 +618,20 @@ and convert_choose (apply : Xml.op_appl_node) : Expr.T.expr = (
       None,
       convert_expression body
     )
+  (* Case 4b: Unbounded tuple CHOOSE where XMLExporter emits individual
+     <unbound> elements without a <tuple/> wrapper (the only known case is
+     unbounded tuple CHOOSE, which is the sole place in TLA+ where an
+     unbounded tuple quantifier is valid). *)
+  | Unbound {is_tuple = false} :: _, [Expression body]
+    when List.for_all (fun (s : Xml.symbol) -> match s with Unbound _ -> true | _ -> false) apply.bound_symbols ->
+    let symbols = List.filter_map (fun (s : Xml.symbol) -> match s with | Unbound ({is_tuple = false} as u) -> Some u | _ -> None) apply.bound_symbols in
+    if List.length symbols > 1
+    then ChooseTuply (
+      List.map (fun (s : Xml.unbound_symbol) -> resolve_bound_symbol apply.node s.symbol_ref) symbols,
+      None,
+      convert_expression body
+    )
+    else conversion_failure "Invalid number of bounds or operands to CHOOSE" apply.node.location
   | _ -> conversion_failure "Invalid number of bounds or operands to CHOOSE" apply.node.location
 ) |> attach_props apply.node
 
