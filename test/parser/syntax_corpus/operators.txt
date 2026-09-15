@@ -99,14 +99,19 @@ Nonfix Minus (GH tlaplus/tlaplus #GH884)
 =============|||
 
 ---- MODULE Test ----
+EXTENDS TestPrelude
 op == - (1,2)
+====
+---- MODULE TestPrelude ----
+x - y == 0
 ====
 
 --------------|||
 
 (source_file (module (header_line) name: (identifier) (header_line)
+  (extends (identifier_ref))
   (operator_definition name: (identifier) (def_eq) definition:
-    (bound_nonfix_op (infix_op_symbol (minus)) (nat_number) (nat_number))
+    (bound_infix_op lhs: (nat_number) symbol: (minus) rhs: (nat_number))
   )
 (double_line)))
 
