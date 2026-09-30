@@ -21,7 +21,6 @@ x $$ y == 19
 x \doteq y == 20
 x .. y == 21
 x ... y == 22
-x !! y == 25
 x >= y == 26
 x \gg y == 28
 x > y == 29
@@ -97,7 +96,6 @@ x \wr y == 101
   (operator_definition parameter: (identifier) name: (infix_op_symbol (doteq)) parameter: (identifier) (def_eq) definition: (nat_number))
   (operator_definition parameter: (identifier) name: (infix_op_symbol (dots_2)) parameter: (identifier) (def_eq) definition: (nat_number))
   (operator_definition parameter: (identifier) name: (infix_op_symbol (dots_3)) parameter: (identifier) (def_eq) definition: (nat_number))
-  (operator_definition parameter: (identifier) name: (infix_op_symbol (excl)) parameter: (identifier) (def_eq) definition: (nat_number))
   (operator_definition parameter: (identifier) name: (infix_op_symbol (geq)) parameter: (identifier) (def_eq) definition: (nat_number))
   (operator_definition parameter: (identifier) name: (infix_op_symbol (gg)) parameter: (identifier) (def_eq) definition: (nat_number))
   (operator_definition parameter: (identifier) name: (infix_op_symbol (gt)) parameter: (identifier) (def_eq) definition: (nat_number))
