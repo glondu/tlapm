@@ -83,7 +83,16 @@ let expect_parse_failure : syntax_test -> bool =
          "Nonfix Submodule Excl (GH tlaplus/tlaplus #GH884)";
          "Nonfix Double Exclamation Operator (GH TSTLA #GH97, GH tlaplus/tlaplus #884)";
        ]
-  | Sany -> fun _ -> false
+  | Sany ->
+     fun test ->
+     List.mem test.info.name [
+         "Label with Subexpression Prefix (GH tlaplus/tlaplus #885)";
+         "Empty Tuple Quantification (GH tlaplus/tlaplus #888)";
+
+         (* https://github.com/tlaplus/tlaplus/issues/616 *)
+         "Invalid Use of LOCAL in LET/IN";
+         "Invalid Use of LOCAL in Proof";
+       ]
 
 (** Names of tests that are unable to match the expected output tree, but not
     because of a bug; instead, the TLAPM syntax tree doesn't contain the
