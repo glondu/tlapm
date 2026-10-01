@@ -177,6 +177,7 @@ let expect_tree_comparison_failure : syntax_test -> bool =
          "Single nested record update";
          "Multiple nested record updates";
          "Multiple nested record updates with mixed dot/function syntax";
+         "Bitfield Number Formats";
        ]
   | Sany -> fun _ -> false
 
