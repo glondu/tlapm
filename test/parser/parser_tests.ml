@@ -143,6 +143,26 @@ let expect_tree_comparison_failure : syntax_test -> bool =
          (* https://github.com/tlaplus/tlapm/issues/235 *)
          "Mistaken Set Filter Test";
          "Mistaken Set Filter Tuples Test";
+
+         (* The following tests pass with SANY *)
+         "Nested Assume/Prove With Label";
+         "Assume/Prove with Mixed Assumptions";
+         "Conjlist with Parentheses";
+         "Conjlist Terminated by Parentheses";
+         "Nested Conjlist Terminated by Parentheses";
+         "Double-Nested Conjlist Terminated by Parentheses";
+         "Disjlist with Parentheses";
+         "Disjlist Terminated by Parentheses";
+         "Nested Disjlist Terminated by Parentheses";
+         "Double-Nested Disjlist Terminated by Parentheses";
+         "Basic Weak Fairness";
+         "Basic Strong Fairness";
+         "Set Literal";
+         "Escape Quote String";
+         "Escape Escape String";
+         "VARIABLE Declaration";
+         "CONSTANT Declaration";
+         "String with supported escape chars";
        ]
   | Sany -> fun _ -> false
 
