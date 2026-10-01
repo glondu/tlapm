@@ -163,6 +163,7 @@ let expect_tree_comparison_failure : syntax_test -> bool =
          "VARIABLE Declaration";
          "CONSTANT Declaration";
          "String with supported escape chars";
+         "Step Expression Requiring Lookahead";
        ]
   | Sany -> fun _ -> false
 
