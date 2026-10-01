@@ -173,6 +173,7 @@ let expect_tree_comparison_failure : syntax_test -> bool =
          "CONSTANT Declaration";
          "String with supported escape chars";
          "Step Expression Requiring Lookahead";
+         "Negative Prefix Op on RHS of Infix (GH tlaplus/tlaplus #893)";
        ]
   | Sany -> fun _ -> false
 
