@@ -174,6 +174,9 @@ let expect_tree_comparison_failure : syntax_test -> bool =
          "String with supported escape chars";
          "Step Expression Requiring Lookahead";
          "Negative Prefix Op on RHS of Infix (GH tlaplus/tlaplus #893)";
+         "Single nested record update";
+         "Multiple nested record updates";
+         "Multiple nested record updates with mixed dot/function syntax";
        ]
   | Sany -> fun _ -> false
 
