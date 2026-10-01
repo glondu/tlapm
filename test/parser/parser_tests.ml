@@ -92,38 +92,42 @@ let expect_parse_failure : syntax_test -> bool =
     @param test Information about the test.
     @return Whether the test should skip the tree comparison phase.
 *)
-let should_skip_tree_comparison (test : syntax_test) : bool =
-  List.mem test.info.name [
-    (* In TLAPM's ASSUME/PROVE parsing, NEW identifiers with unspecified 
-       level are by default Constant instead of Unknown *)
-    "Assume/Prove With New Identifier of Unspecified Level";
-    
-    (* Jlist terminated by single line comment omitted in TLAPM AST *)
-    "Keyword-Unit-Terminated Conjlist";
-    "Keyword-Unit-Terminated Disjlist";
+let should_skip_tree_comparison : syntax_test -> bool =
+  match  !Tlapm_lib__Params.parser_backend with
+  | Tlapm ->
+     fun test ->
+     List.mem test.info.name [
+         (* In TLAPM's ASSUME/PROVE parsing, NEW identifiers with unspecified
+            level are by default Constant instead of Unknown *)
+         "Assume/Prove With New Identifier of Unspecified Level";
 
-    (* Unnecessary parentheses omitted in TLAPM AST *)
-    "Nested Parentheses";
+         (* Jlist terminated by single line comment omitted in TLAPM AST *)
+         "Keyword-Unit-Terminated Conjlist";
+         "Keyword-Unit-Terminated Disjlist";
 
-    (* TLAPM AST does not distinguish between nonfix and infix ops *)
-    "Lexically-Conflicting Nonfix Operators";
-    "Minus and Negative";
-    "Nonfix Minus (GH tlaplus/tlaplus #GH884)";
-    "Nonfix Prefix Operators";
-    "Nonfix Infix Operators";
-    "Nonfix Postfix Operators";
+         (* Unnecessary parentheses omitted in TLAPM AST *)
+         "Nested Parentheses";
 
-    (* TLAPM uses function literals for function definitions *)
-    (* See: https://github.com/tlaplus/tlapm/issues/237 *)
-    "Function Literal";
+         (* TLAPM AST does not distinguish between nonfix and infix ops *)
+         "Lexically-Conflicting Nonfix Operators";
+         "Minus and Negative";
+         "Nonfix Minus (GH tlaplus/tlaplus #GH884)";
+         "Nonfix Prefix Operators";
+         "Nonfix Infix Operators";
+         "Nonfix Postfix Operators";
 
-    (* TLAPM makes multi-parameter EXCEPT update statements into tuples *)
-    "Record Update with Multiple Parameters";
-    "Record Update with Tuple and Non-Tuple Parameters";
-    
-    (* TLAPM does not distinguish between <=> and \equiv *)
-    "IFF Disambiguation"
-  ]
+         (* TLAPM uses function literals for function definitions *)
+         (* See: https://github.com/tlaplus/tlapm/issues/237 *)
+         "Function Literal";
+
+         (* TLAPM makes multi-parameter EXCEPT update statements into tuples *)
+         "Record Update with Multiple Parameters";
+         "Record Update with Tuple and Non-Tuple Parameters";
+
+         (* TLAPM does not distinguish between <=> and \equiv *)
+         "IFF Disambiguation"
+       ]
+  | Sany -> fun _ -> false
 
 (** Names of tests that are expected to fail the tree comparison phase due to
     bugs in TLAPM's syntax parser.
